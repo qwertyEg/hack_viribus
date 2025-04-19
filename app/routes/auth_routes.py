@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models.user import User
 from app import db
@@ -31,6 +31,7 @@ def register():
         return redirect(url_for('material.list'))
     
     form = RegisterForm()
+    
     if form.validate_on_submit():
         user = User(username=form.username.data)
         user.set_password(form.password.data)

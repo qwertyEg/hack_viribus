@@ -39,6 +39,15 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
+                        <div class="form-text">
+                            <p class="mb-1">Пароль должен содержать:</p>
+                            <ul class="mb-0">
+                                <li>Минимум 8 символов</li>
+                                <li>Хотя бы одну букву</li>
+                                <li>Хотя бы одну цифру</li>
+                                <li>Хотя бы один специальный символ (@$!%*#?&)</li>
+                            </ul>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="password2" class="form-label">
