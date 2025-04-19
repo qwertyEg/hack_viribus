@@ -18,6 +18,35 @@
         margin: 0;
     }
 
+    .filters-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .filters-form .form-select {
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .filters-form .form-select:focus {
+        border-color: #1e3c72;
+        box-shadow: 0 0 0 0.2rem rgba(30, 60, 114, 0.25);
+    }
+
+    .rating-filter {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .rating-filter select {
+        flex: 1;
+    }
+
     .material-card {
         border: none;
         border-radius: 15px;
@@ -141,6 +170,44 @@
     </div>
     {% endif %}
 
+    <div class="filters-card">
+        <form method="GET" action="{{ url_for('material.list') }}" class="filters-form">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <select name="category_id" class="form-select">
+                        <option value="">Все категории</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if request.args.get('category_id')|int==category.id
+                            %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <div class="rating-filter">
+                        <select name="min_rating" class="form-select">
+                            <option value="">Любой рейтинг</option>
+                            <option value="4.5" {% if request.args.get('min_rating')=='4.5' %}selected{% endif %}>4.5+
+                                звезд</option>
+                            <option value="4.0" {% if request.args.get('min_rating')=='4.0' %}selected{% endif %}>4.0+
+                                звезд</option>
+                            <option value="3.5" {% if request.args.get('min_rating')=='3.5' %}selected{% endif %}>3.5+
+                                звезд</option>
+                            <option value="3.0" {% if request.args.get('min_rating')=='3.0' %}selected{% endif %}>3.0+
+                                звезд</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel"></i> Применить фильтры
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <div class="row">
         {% for material in materials.items %}
         <div class="col-md-4 mb-4">
@@ -156,6 +223,7 @@
                             <i class="bi bi-star"></i>
                             {% endif %}
                             {% endfor %}
+                            <span class="ms-2 text-muted">({{ "%.1f"|format(material.average_rating()) }})</span>
                     </div>
                 </div>
                 <div class="card-footer">
@@ -178,14 +246,17 @@
         <ul class="pagination justify-content-center">
             {% if materials.has_prev %}
             <li class="page-item">
-                <a class="page-link" href="{{ url_for('material.list', page=materials.prev_num) }}">Предыдущая</a>
+                <a class="page-link"
+                    href="{{ url_for('material.list', page=materials.prev_num, category_id=request.args.get('category_id', ''), min_rating=request.args.get('min_rating', '')) }}">Предыдущая</a>
             </li>
             {% endif %}
 
             {% for page in materials.iter_pages() %}
             {% if page %}
             <li class="page-item {% if page == materials.page %}active{% endif %}">
-                <a class="page-link" href="{{ url_for('material.list', page=page) }}">{{ page }}</a>
+                <a class="page-link"
+                    href="{{ url_for('material.list', page=page, category_id=request.args.get('category_id', ''), min_rating=request.args.get('min_rating', '')) }}">{{
+                    page }}</a>
             </li>
             {% else %}
             <li class="page-item disabled">
@@ -196,7 +267,8 @@
 
             {% if materials.has_next %}
             <li class="page-item">
-                <a class="page-link" href="{{ url_for('material.list', page=materials.next_num) }}">Следующая</a>
+                <a class="page-link"
+                    href="{{ url_for('material.list', page=materials.next_num, category_id=request.args.get('category_id', ''), min_rating=request.args.get('min_rating', '')) }}">Следующая</a>
             </li>
             {% endif %}
         </ul>

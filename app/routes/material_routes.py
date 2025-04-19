@@ -22,6 +22,7 @@ def list():
     page = request.args.get('page', 1, type=int)
     query = request.args.get('query', '')
     category_id = request.args.get('category_id', type=int)
+    min_rating = request.args.get('min_rating', type=float)
     
     materials_query = Material.query.filter_by(status='approved')
     
@@ -36,10 +37,13 @@ def list():
     if category_id:
         materials_query = materials_query.filter_by(category_id=category_id)
     
+    if min_rating is not None:
+        materials_query = materials_query.filter(Material.average_rating_value >= min_rating)
+    
     materials = materials_query.paginate(page=page, per_page=9)
     categories = Category.query.all()
     
-    return render_template('materials/list.html', materials=materials, categories=categories)
+    return render_template('materials/list.html', materials=materials, categories=categories, min_rating=min_rating)
 
 @bp.route('/materials/<int:id>')
 def detail(id):
