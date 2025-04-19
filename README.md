@@ -1049,3 +1049,246 @@ llama-api:
     - LLAMA_CPP_LIB=.../libllama.so  # Собранная CPU-версия
 ```
 
+Интегрируем модель **DeepSeek-V3** локально в ваш проект. Пошаговая инструкция:
+
+---
+
+## 1. Подготовка модели
+### 1.1. Скачивание модели
+1. Перейдите на страницу модели:  
+   [https://huggingface.co/deepseek-ai/DeepSeek-V3-0324](https://huggingface.co/deepseek-ai/DeepSeek-V3-0324)
+2. Убедитесь, что у вас есть доступ (требуется заполнить форму на HF).
+3. Клонируйте репозиторий:
+```bash
+git lfs install
+git clone https://huggingface.co/deepseek-ai/DeepSeek-V3-0324
+```
+
+### 1.2. Конвертация в GGUF (для llama.cpp)
+Если модель в формате PyTorch:
+```bash
+# Установите llama.cpp
+git clone https://github.com/ggerganov/llama.cpp
+cd llama.cpp && make
+
+# Конвертация
+python3 convert.py --input-dir ../DeepSeek-V3-0324 --output-dir ./models/deepseek --vocab-type bpe
+```
+
+---
+
+## 2. Настройка Docker-окружения
+### 2.1. Структура проекта
+```
+deepseek-bot/
+├── docker-compose.yml
+├── bot/                      # Телеграм-бот
+│   └── services/deepseek.py  # Клиент для DeepSeek
+├── deepseek-api/             # Локальный ИИ-сервис
+│   ├── app/
+│   │   ├── main.py           # FastAPI эндпоинты
+│   │   └── model_loader.py
+│   ├── models/               # Модель в GGUF
+│   └── Dockerfile
+└── .env
+```
+
+### 2.2. Dockerfile для ИИ-сервиса
+```dockerfile
+FROM nvidia/cuda:12.2.0-base
+
+WORKDIR /app
+COPY . .
+
+RUN apt-get update && \
+    apt-get install -y python3.10 python3-pip && \
+    pip install torch transformers fastapi uvicorn
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002"]
+```
+
+### 2.3. docker-compose.yml
+```yaml
+version: '3.8'
+
+services:
+  deepseek-api:
+    build: ./deepseek-api
+    volumes:
+      - ./deepseek-api/models:/app/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+    ports:
+      - "8002:8002"
+```
+
+---
+
+## 3. Локальный API для DeepSeek-V3
+### 3.1. Загрузка модели (`model_loader.py`)
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model = None
+tokenizer = None
+
+def load_model():
+    global model, tokenizer
+    model = AutoModelForCausalLM.from_pretrained(
+        "/app/models/DeepSeek-V3-0324",
+        device_map="auto",
+        torch_dtype="auto"
+    )
+    tokenizer = AutoTokenizer.from_pretrained("/app/models/DeepSeek-V3-0324")
+```
+
+### 3.2. FastAPI эндпоинты (`main.py`)
+```python
+from fastapi import FastAPI
+from model_loader import load_model, model, tokenizer
+
+app = FastAPI()
+
+@app.on_event("startup")
+async def startup():
+    load_model()
+
+@app.post("/generate")
+async def generate(prompt: str, max_tokens: int = 200):
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=max_tokens,
+        temperature=0.7
+    )
+    return {"response": tokenizer.decode(outputs[0])}
+```
+
+---
+
+## 4. Интеграция с ботом
+### 4.1. Клиент для DeepSeek API
+```python
+# bot/services/deepseek.py
+import aiohttp
+from config import settings
+
+class DeepSeekClient:
+    def __init__(self):
+        self.base_url = settings.DEEPSEEK_API_URL
+        
+    async def generate_response(self, user_query: str, context: str) -> str:
+        prompt = f"""
+        <|system|>
+        Ты — образовательный ассистент. Отвечай на русском. 
+        Контекст: {context}
+        </s>
+        <|user|>
+        {user_query}
+        </s>
+        <|assistant|>
+        """
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{self.base_url}/generate",
+                json={"prompt": prompt, "max_tokens": 512}
+            ) as response:
+                data = await response.json()
+                return data.get("response", "")
+```
+
+### 4.2. Обработчик в боте
+```python
+# bot/handlers/deepseek_helper.py
+from aiogram import Router, F
+from aiogram.types import Message
+from services.deepseek import DeepSeekClient
+
+router = Router()
+deepseek = DeepSeekClient()
+
+@router.message(F.text == "DeepSeek Помощник")
+async def handle_deepseek(message: Message):
+    # Получаем контекст из API веб-сервиса
+    context = await get_educational_context(message.from_user.id)
+    
+    # Генерируем ответ
+    response = await deepseek.generate_response(
+        message.text, 
+        context
+    )
+    
+    await message.answer(response[:4000])
+```
+
+---
+
+## 5. Оптимизации
+1. **Квантование** (если используется GGUF):
+```bash
+./llama.cpp/quantize ./models/deepseek/ggml-model-f16.gguf ./models/deepseek/ggml-model-q4_k.gguf q4_k
+```
+
+2. **Кеширование ответов**:
+```python
+# Добавьте Redis
+import redis
+r = redis.Redis()
+
+async def get_cached_response(prompt: str):
+    key = f"deepseek:{hash(prompt)}"
+    cached = r.get(key)
+    if cached:
+        return cached.decode()
+    # ... генерация и сохранение в Redis
+```
+
+---
+
+## 6. Запуск
+```bash
+# Собрать и запустить
+docker compose build
+docker compose up -d
+
+# Проверить работу API
+curl -X POST http://localhost:8002/generate -H "Content-Type: application/json" -d '{"prompt":"Что такое интеграл?"}'
+```
+
+---
+
+## Особенности DeepSeek-V3
+1. **Токенизация**: Использует специальные токены для ролей:
+```python
+prompt = "<|system|>\nТы помощник...</s>\n<|user|>\nВопрос...</s>\n<|assistant|>\n"
+```
+
+2. **Контекстное окно**: 32k токенов (уточните в документации модели).
+
+3. **Аппаратные требования**:
+   - Минимум 24GB VRAM для FP16
+   - 16GB RAM для квантованной версии
+
+---
+
+## Пример промпта для обучения
+```txt
+<|system|>
+Ты — ассистент математического курса. Отвечай строго по материалам платформы.
+Доступные материалы: [123] Лекция по интегралам, [456] Семинар по производным.
+</s>
+<|user|>
+Объясните, как решать интегралы методом подстановки.
+</s>
+<|assistant|>
+Для решения интегралов методом подстановки (см. материал [123]):
+1. Выберите часть интеграла для замены...
+```
+
+
+
