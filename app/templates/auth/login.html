@@ -4,19 +4,23 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">Вход в систему</h4>
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-box-arrow-in-right"></i> Вход в систему
+                </h4>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('auth.login') }}">
+                <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
                     {{ form.csrf_token }}
                     <div class="mb-3">
-                        {{ form.username.label(class="form-label") }}
-                        {{ form.username(class="form-control") }}
+                        <label for="username" class="form-label">
+                            <i class="bi bi-person"></i> Имя пользователя
+                        </label>
+                        {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), id="username") }}
                         {% if form.username.errors %}
-                            <div class="invalid-feedback d-block">
+                            <div class="invalid-feedback">
                                 {% for error in form.username.errors %}
                                     {{ error }}
                                 {% endfor %}
@@ -24,10 +28,12 @@
                         {% endif %}
                     </div>
                     <div class="mb-3">
-                        {{ form.password.label(class="form-label") }}
-                        {{ form.password(class="form-control") }}
+                        <label for="password" class="form-label">
+                            <i class="bi bi-lock"></i> Пароль
+                        </label>
+                        {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), id="password") }}
                         {% if form.password.errors %}
-                            <div class="invalid-feedback d-block">
+                            <div class="invalid-feedback">
                                 {% for error in form.password.errors %}
                                     {{ error }}
                                 {% endfor %}
@@ -35,14 +41,25 @@
                         {% endif %}
                     </div>
                     <div class="mb-3 form-check">
-                        {{ form.remember(class="form-check-input") }}
-                        {{ form.remember.label(class="form-check-label") }}
+                        {{ form.remember(class="form-check-input", id="remember") }}
+                        <label class="form-check-label" for="remember">
+                            Запомнить меня
+                        </label>
                     </div>
-                    <button type="submit" class="btn btn-primary">Войти</button>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-box-arrow-in-right"></i> Войти
+                        </button>
+                    </div>
                 </form>
             </div>
             <div class="card-footer text-center">
-                <p class="mb-0">Нет аккаунта? <a href="{{ url_for('auth.register') }}">Зарегистрируйтесь</a></p>
+                <p class="mb-0">
+                    Нет аккаунта? 
+                    <a href="{{ url_for('auth.register') }}" class="text-decoration-none">
+                        <i class="bi bi-person-plus"></i> Зарегистрироваться
+                    </a>
+                </p>
             </div>
         </div>
     </div>

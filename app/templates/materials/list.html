@@ -5,42 +5,62 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col">
-        <h1>Материалы</h1>
+        <h1 class="display-4">
+            <i class="bi bi-journal-text"></i> Материалы
+        </h1>
     </div>
     {% if current_user.is_authenticated %}
     <div class="col-auto">
-        <a href="{{ url_for('material.upload') }}" class="btn btn-primary">Загрузить материал</a>
+        <a href="{{ url_for('material.upload') }}" class="btn btn-primary">
+            <i class="bi bi-upload"></i> Загрузить материал
+        </a>
     </div>
     {% endif %}
 </div>
 
-<div class="row">
+{% if materials.items %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for material in materials.items %}
-    <div class="col-md-6 mb-4">
+    <div class="col">
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title">{{ material.title }}</h5>
-                <p class="card-text">{{ material.description }}</p>
-                <div class="mb-2">
-                    <span class="badge bg-primary">{{ material.category.name }}</span>
-                    <span class="badge bg-secondary">Рейтинг: {{ "%.1f"|format(material.average_rating()) }}</span>
+                <p class="card-text text-muted">{{ material.description }}</p>
+                <div class="mb-3">
+                    <span class="badge bg-primary">
+                        <i class="bi bi-folder"></i> {{ material.category.name }}
+                    </span>
+                    <span class="badge bg-success">
+                        <i class="bi bi-star"></i> {{ "%.1f"|format(material.average_rating()) }}
+                    </span>
                 </div>
-                <a href="{{ material.file_url }}" class="btn btn-outline-primary" target="_blank">Скачать</a>
-                <a href="{{ url_for('material.detail', id=material.id) }}" class="btn btn-outline-secondary">Подробнее</a>
+                <div class="d-grid gap-2">
+                    <a href="{{ material.file_url }}" class="btn btn-outline-primary" target="_blank">
+                        <i class="bi bi-download"></i> Скачать
+                    </a>
+                    <a href="{{ url_for('material.detail', id=material.id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-info-circle"></i> Подробнее
+                    </a>
+                </div>
             </div>
-            <div class="card-footer text-muted">
-                Автор: {{ material.author.username }} | {{ material.created_at.strftime('%d.%m.%Y') }}
+            <div class="card-footer bg-transparent">
+                <small class="text-muted">
+                    <i class="bi bi-person"></i> {{ material.author.username }} | 
+                    <i class="bi bi-calendar"></i> {{ material.created_at.strftime('%d.%m.%Y') }}
+                </small>
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
 
-<nav aria-label="Page navigation">
+<nav aria-label="Page navigation" class="mt-4">
     <ul class="pagination justify-content-center">
         {% if materials.has_prev %}
             <li class="page-item">
-                <a class="page-link" href="{{ url_for('material.list', page=materials.prev_num) }}">Предыдущая</a>
+                <a class="page-link" href="{{ url_for('material.list', page=materials.prev_num) }}">
+                    <i class="bi bi-chevron-left"></i> Предыдущая
+                </a>
             </li>
         {% endif %}
         
@@ -58,9 +78,16 @@
         
         {% if materials.has_next %}
             <li class="page-item">
-                <a class="page-link" href="{{ url_for('material.list', page=materials.next_num) }}">Следующая</a>
+                <a class="page-link" href="{{ url_for('material.list', page=materials.next_num) }}">
+                    Следующая <i class="bi bi-chevron-right"></i>
+                </a>
             </li>
         {% endif %}
     </ul>
 </nav>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Пока нет доступных материалов.
+</div>
+{% endif %}
 {% endblock %} 
