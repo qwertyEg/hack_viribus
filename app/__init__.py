@@ -19,7 +19,9 @@ def create_app(config_class=Config):
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Пожалуйста, войдите для доступа к этой странице.'
 
-    from app.routes import auth_routes, material_routes, moderation_routes, search_routes
+    from app.routes import auth_routes, material_routes, moderation_routes, search_routes, home_routes, chat_routes
+    app.register_blueprint(home_routes.bp)
+    app.register_blueprint(chat_routes.bp)
     app.register_blueprint(auth_routes.bp)
     app.register_blueprint(material_routes.bp)
     app.register_blueprint(moderation_routes.bp)
