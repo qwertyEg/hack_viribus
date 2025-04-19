@@ -2,11 +2,13 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from app.models.material import Material
 from app.models.rating import Rating
+from app.models.category import Category
 from app import db
 from app.forms.upload_form import UploadForm
 from app.forms.rating_form import RatingForm
 from app.services.drive_service import DriveService
 from werkzeug.utils import secure_filename
+from sqlalchemy import or_
 import os
 
 bp = Blueprint('material', __name__)
@@ -18,14 +20,26 @@ def index():
 @bp.route('/materials')
 def list():
     page = request.args.get('page', 1, type=int)
+    query = request.args.get('query', '')
     category_id = request.args.get('category_id', type=int)
-    query = Material.query.filter_by(status='approved')
+    
+    materials_query = Material.query.filter_by(status='approved')
+    
+    if query:
+        materials_query = materials_query.filter(
+            or_(
+                Material.title.ilike(f'%{query}%'),
+                Material.description.ilike(f'%{query}%')
+            )
+        )
     
     if category_id:
-        query = query.filter_by(category_id=category_id)
+        materials_query = materials_query.filter_by(category_id=category_id)
     
-    materials = query.paginate(page=page, per_page=10)
-    return render_template('materials/list.html', materials=materials)
+    materials = materials_query.paginate(page=page, per_page=9)
+    categories = Category.query.all()
+    
+    return render_template('materials/list.html', materials=materials, categories=categories)
 
 @bp.route('/materials/<int:id>')
 def detail(id):

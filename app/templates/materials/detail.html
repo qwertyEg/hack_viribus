@@ -2,70 +2,179 @@
 
 {% block title %}{{ material.title }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .course-header {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 3rem;
+        border-radius: 15px;
+    }
+
+    .course-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .course-description {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: #666;
+        margin-bottom: 2rem;
+    }
+
+    .course-details {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .course-details h3 {
+        color: #1e3c72;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+    }
+
+    .course-details ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .course-details li {
+        margin-bottom: 1rem;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+
+    .course-details li:before {
+        content: "•";
+        color: #1e3c72;
+        position: absolute;
+        left: 0;
+    }
+
+    .badge {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border-radius: 50px;
+    }
+
+    .badge.bg-primary {
+        background: rgba(30, 60, 114, 0.1) !important;
+        color: #1e3c72;
+    }
+
+    .badge.bg-success {
+        background: rgba(40, 167, 69, 0.1) !important;
+        color: #28a745;
+    }
+
+    .rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+
+    .rating input {
+        display: none;
+    }
+
+    .rating label {
+        font-size: 2em;
+        color: #ddd;
+        cursor: pointer;
+        padding: 0 5px;
+    }
+
+    .rating label:hover,
+    .rating label:hover~label,
+    .rating input:checked~label {
+        color: #ffd700;
+    }
+
+    .btn-download {
+        background: #1e3c72;
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-download:hover {
+        background: #2a5298;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h2 class="mb-0">{{ material.title }}</h2>
+<div class="container">
+    <div class="course-header text-center">
+        <h1 class="course-title">{{ material.title }}</h1>
+        <div class="mt-3">
+            <span class="badge bg-primary">
+                <i class="bi bi-folder"></i> {{ material.category.name }}
+            </span>
+            <span class="badge bg-success">
+                <i class="bi bi-star-fill"></i> {{ "%.1f"|format(material.average_rating()) }}
+            </span>
+        </div>
     </div>
-    <div class="card-body">
-        <div class="mb-4">
-            <p class="card-text">{{ material.description }}</p>
-            <div class="mb-2">
-                <span class="badge bg-primary">{{ material.category.name }}</span>
-                <span class="badge bg-secondary">Рейтинг: {{ "%.1f"|format(material.average_rating()) }}</span>
+
+    <div class="course-details">
+        <h3>Описание курса</h3>
+        <p class="course-description">{{ material.description }}</p>
+
+        <h3>Что вы узнаете</h3>
+        <ul>
+            <li>Основные понятия и принципы предмета</li>
+            <li>Ключевые теоремы и их доказательства</li>
+            <li>Практические методы решения задач</li>
+            <li>Применение знаний в реальных ситуациях</li>
+        </ul>
+
+        <h3>Для кого этот курс</h3>
+        <ul>
+            <li>Студенты, изучающие предмет</li>
+            <li>Преподаватели, ищущие дополнительные материалы</li>
+            <li>Все, кто хочет углубить свои знания</li>
+        </ul>
+    </div>
+
+    <div class="course-details">
+        <h3>Оцените материал</h3>
+        <form id="rating-form" method="POST" action="{{ url_for('material.rate', id=material.id) }}">
+            {{ form.csrf_token }}
+            <div class="rating mb-3">
+                {% for i in range(5, 0, -1) %}
+                <input type="radio" name="rating_value" id="star{{ i }}" value="{{ i }}" {% if form.rating_value.data==i
+                    %}checked{% endif %}>
+                <label for="star{{ i }}" title="{{ i }} звезд">☆</label>
+                {% endfor %}
             </div>
-        </div>
-
-        <div class="mb-4">
-            <h4>Оцените материал</h4>
-            <form id="rating-form" method="POST" action="{{ url_for('material.rate', id=material.id) }}">
-                {{ form.csrf_token }}
-                <div class="rating mb-3">
-                    {% for i in range(5, 0, -1) %}
-                        <input type="radio" name="rating_value" id="star{{ i }}" value="{{ i }}"
-                               {% if form.rating_value.data == i %}checked{% endif %}>
-                        <label for="star{{ i }}" title="{{ i }} звезд">☆</label>
-                    {% endfor %}
-                </div>
-                <button type="submit" class="btn btn-primary">Отправить оценку</button>
-            </form>
-        </div>
-
-        <div class="mb-4">
-            <h4>Скачать материал</h4>
-            <a href="{{ material.file_url }}" class="btn btn-primary" target="_blank">
-                <i class="bi bi-download"></i> Скачать
-            </a>
-        </div>
+            <button type="submit" class="btn btn-primary">Отправить оценку</button>
+        </form>
     </div>
-    <div class="card-footer text-muted">
-        Автор: {{ material.author.username }} | 
-        Загружено: {{ material.created_at.strftime('%d.%m.%Y') }}
+
+    <div class="text-center">
+        <a href="{{ material.file_url }}" class="btn btn-download" target="_blank">
+            <i class="bi bi-download"></i> Скачать материал
+        </a>
+    </div>
+
+    <div class="text-center mt-4 text-muted">
+        <small>
+            <i class="bi bi-person"></i> Автор: {{ material.author.username }} |
+            <i class="bi bi-calendar"></i> Загружено: {{ material.created_at.strftime('%d.%m.%Y') }}
+        </small>
     </div>
 </div>
-
-<style>
-.rating {
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: flex-end;
-}
-
-.rating input {
-    display: none;
-}
-
-.rating label {
-    font-size: 2em;
-    color: #ddd;
-    cursor: pointer;
-    padding: 0 5px;
-}
-
-.rating label:hover,
-.rating label:hover ~ label,
-.rating input:checked ~ label {
-    color: #ffd700;
-}
-</style>
-{% endblock %} 
+{% endblock %}
