@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: 2603ab502eee
+Revision ID: 82c5e88eb0e7
 Revises: 
-Create Date: 2025-04-19 19:46:41.727780
+Create Date: 2025-04-20 01:15:55.354378
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '2603ab502eee'
+revision = '82c5e88eb0e7'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -26,18 +26,20 @@ def upgrade():
     )
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('username', sa.String(length=64), nullable=False),
+    sa.Column('username', sa.String(length=80), nullable=False),
+    sa.Column('email', sa.String(length=120), nullable=False),
     sa.Column('password_hash', sa.String(length=128), nullable=True),
     sa.Column('role', sa.String(length=20), nullable=True),
     sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
     )
     op.create_table('materials',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('title', sa.String(length=100), nullable=False),
-    sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('file_id', sa.String(length=100), nullable=False),
-    sa.Column('folder_id', sa.String(length=100), nullable=True),
+    sa.Column('title', sa.String(length=120), nullable=False),
+    sa.Column('description', sa.Text(), nullable=False),
+    sa.Column('file_id', sa.String(length=255), nullable=True),
+    sa.Column('video_url', sa.String(length=255), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('category_id', sa.Integer(), nullable=False),

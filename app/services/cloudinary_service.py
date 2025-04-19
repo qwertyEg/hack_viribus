@@ -21,18 +21,40 @@ class CloudinaryService:
 
     def upload_file(self, file_path, folder_name):
         try:
-            # Загружаем файл через SDK с настройками для публичного доступа
+            # Определяем тип файла по расширению
+            file_extension = os.path.splitext(file_path)[1].lower()
+            
+            # Настройки для разных типов файлов
+            upload_options = {
+                'folder': f"materials/{folder_name}",
+                'use_filename': True,
+                'unique_filename': False,
+                'type': "upload",
+                'access_mode': "public",
+                'overwrite': True,
+                'invalidate': True,
+                'eager': []
+            }
+            
+            # Для видео добавляем специальные настройки
+            if file_extension == '.mp4':
+                upload_options.update({
+                    'resource_type': 'video',
+                    'format': 'mp4',
+                    'eager': [
+                        {'format': 'mp4', 'video_codec': 'h264'}
+                    ]
+                })
+            else:
+                # Для документов используем raw тип
+                upload_options.update({
+                    'resource_type': 'raw'
+                })
+            
+            # Загружаем файл через SDK
             result = cloudinary.uploader.upload(
                 file_path,
-                folder=f"materials/{folder_name}",
-                resource_type="raw",
-                use_filename=True,
-                unique_filename=False,
-                type="upload",
-                access_mode="public",
-                overwrite=True,
-                invalidate=True,  # Инвалидируем кэш
-                eager=[]  # Не создаем производные версии
+                **upload_options
             )
             
             return {
@@ -44,22 +66,35 @@ class CloudinaryService:
 
     def delete_file(self, public_id):
         try:
-            cloudinary.uploader.destroy(public_id, resource_type='raw')
+            # Определяем тип файла по public_id
+            resource_type = 'video' if public_id.endswith('.mp4') else 'raw'
+            cloudinary.uploader.destroy(public_id, resource_type=resource_type)
         except Exception as e:
             raise Exception(f"Ошибка при удалении файла из Cloudinary: {str(e)}")
 
     def get_file_content(self, public_id):
         try:
-            # Генерируем подписанный URL с временем жизни 1 час
-            url, options = cloudinary.utils.cloudinary_url(
-                public_id,
-                resource_type='raw',
-                type='upload',
-                secure=True,
-                sign_url=True,
-                expires_at=int(time.time()) + 3600,  # URL действителен 1 час
-                access_mode="public"  # Указываем публичный доступ
-            )
+            # Определяем тип файла по public_id
+            is_video = public_id.endswith('.mp4')
+            
+            if is_video:
+                # Для видео получаем URL через CloudinaryVideo
+                video = cloudinary.CloudinaryVideo(public_id)
+                url = video.video_url(
+                    secure=True,
+                    sign_url=True,
+                    expires_at=int(time.time()) + 3600
+                )
+            else:
+                # Для документов используем стандартный подход
+                url, options = cloudinary.utils.cloudinary_url(
+                    public_id,
+                    resource_type='raw',
+                    type='upload',
+                    secure=True,
+                    sign_url=True,
+                    expires_at=int(time.time()) + 3600
+                )
             
             # Загружаем файл
             response = requests.get(url)
@@ -67,4 +102,46 @@ class CloudinaryService:
             
             return BytesIO(response.content)
         except Exception as e:
-            raise Exception(f"Ошибка при получении содержимого файла: {str(e)}") 
+            raise Exception(f"Ошибка при получении содержимого файла: {str(e)}")
+
+    def get_file_url(self, public_id):
+        """Получает URL файла для просмотра"""
+        try:
+            is_video = public_id.endswith('.mp4')
+            
+            if is_video:
+                video = cloudinary.CloudinaryVideo(public_id)
+                return video.video_url(
+                    secure=True,
+                    sign_url=True,
+                    expires_at=int(time.time()) + 3600
+                )
+            else:
+                url, options = cloudinary.utils.cloudinary_url(
+                    public_id,
+                    resource_type='raw',
+                    type='upload',
+                    secure=True,
+                    sign_url=True,
+                    expires_at=int(time.time()) + 3600
+                )
+                return url
+        except Exception as e:
+            raise Exception(f"Ошибка при получении URL файла: {str(e)}")
+
+    def get_video_url(self, public_id):
+        """Получает URL для воспроизведения видео"""
+        try:
+            # Создаем объект CloudinaryVideo
+            video = cloudinary.CloudinaryVideo(public_id)
+            
+            # Получаем URL с подписью и сроком действия 1 час
+            url = video.video_url(
+                secure=True,
+                sign_url=True,
+                expires_at=int(time.time()) + 3600
+            )
+            
+            return url
+        except Exception as e:
+            raise Exception(f"Ошибка при получении URL видео: {str(e)}") 

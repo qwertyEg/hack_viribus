@@ -2,8 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models.user import User
 from app import db
-from app.forms.login_form import LoginForm
-from app.forms.register_form import RegisterForm
+from app.forms.auth_forms import LoginForm, RegistrationForm
 
 bp = Blueprint('auth', __name__)
 
@@ -19,7 +18,7 @@ def login():
             flash('Неверное имя пользователя или пароль', 'danger')
             return redirect(url_for('auth.login'))
         
-        login_user(user, remember=form.remember.data)
+        login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         return redirect(next_page or url_for('material.list'))
     
@@ -30,9 +29,13 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('material.list'))
     
-    form = RegisterForm()
+    form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(username=form.username.data)
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            role='user'
+        )
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()

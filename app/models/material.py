@@ -4,18 +4,17 @@ from app import db
 class Material(db.Model):
     __tablename__ = 'materials'
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    file_id = db.Column(db.String(100), nullable=False)  # ID файла в Google Drive
-    folder_id = db.Column(db.String(100))  # ID папки в Google Drive
+    title = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    file_id = db.Column(db.String(255), nullable=True)
+    video_url = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     is_approved = db.Column(db.Boolean, default=False)
-    status = db.Column(db.String(20), default='unapproved')  # unapproved/approved/rejected
-    ratings = db.relationship('Rating', backref='material', lazy='dynamic')
+    status = db.Column(db.String(20), default='unapproved')
+    ratings = db.relationship('Rating', backref='material', lazy=True)
 
-    # Связи
     user = db.relationship('User', overlaps="author,materials")
     category = db.relationship('Category', back_populates='materials')
 
@@ -37,4 +36,43 @@ class Material(db.Model):
 
     def reject(self):
         self.status = 'rejected'
-        db.session.commit() 
+        db.session.commit()
+
+    def get_embed_url(self):
+        if not self.video_url:
+            return None
+            
+        if 'youtube.com' in self.video_url or 'youtu.be' in self.video_url:
+            if 'youtu.be' in self.video_url:
+                video_id = self.video_url.split('/')[-1]
+            else:
+                video_id = self.video_url.split('v=')[1].split('&')[0]
+            return f'https://www.youtube.com/embed/{video_id}'
+            
+        elif 'vimeo.com' in self.video_url:
+            video_id = self.video_url.split('/')[-1]
+            return f'https://player.vimeo.com/video/{video_id}'
+            
+        elif 'vk.com' in self.video_url:
+            parts = self.video_url.split('video-')[1].split('_')
+            owner_id = parts[0]
+            video_id = parts[1]
+            return f'https://vk.com/video_ext.php?oid={owner_id}&id={video_id}&hash='
+            
+        elif 'rutube.ru' in self.video_url:
+            video_id = self.video_url.split('/')[-2]
+            return f'https://rutube.ru/play/embed/{video_id}'
+            
+        elif 'mail.ru' in self.video_url and '/video/' in self.video_url:
+            video_id = self.video_url.split('/')[-1]
+            return f'https://my.mail.ru/video/embed/{video_id}'
+            
+        elif 'video.yandex.ru' in self.video_url:
+            video_id = self.video_url.split('/')[-2]
+            return f'https://video.yandex.ru/iframe/{video_id}'
+            
+        elif 'dailymotion.com' in self.video_url:
+            video_id = self.video_url.split('/')[-1]
+            return f'https://www.dailymotion.com/embed/video/{video_id}'
+            
+        return self.video_url 
