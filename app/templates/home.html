@@ -4,12 +4,39 @@
 
 {% block extra_css %}
 <style>
+    .page-container {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+
+    .welcome-section {
+        margin-bottom: 6rem;
+        position: relative;
+    }
+
+    .main-title {
+        font-size: 4.5rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin: 0;
+        color: transparent;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        line-height: 1.2;
+    }
+
     .feature-card {
         height: 500px;
         position: relative;
         overflow: hidden;
-        border-radius: 15px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     }
 
     .feature-card::before {
@@ -46,9 +73,9 @@
         height: 100%;
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
-        padding: 2rem;
+        padding: 4rem 3rem;
         background: rgba(0, 0, 0, 0.2);
         transition: background 0.3s ease;
     }
@@ -59,78 +86,92 @@
 
     .feature-icon {
         font-size: 5rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
         color: white;
     }
 
     .feature-title {
         font-size: 2.5rem;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
         color: white;
         text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 
     .feature-description {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         margin-bottom: 2rem;
         text-align: center;
         color: white;
         text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        max-width: 80%;
     }
 
     .feature-button {
-        padding: 1.5rem 3.5rem;
-        font-size: 1.4rem;
-        border-radius: 50px;
+        padding: 2rem 4rem;
+        font-size: 1.6rem;
+        border-radius: 60px;
         text-transform: uppercase;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         transition: all 0.3s ease;
-        background-color: #007bff;
-        border: 3px solid white;
+        background-color: transparent;
+        border: 4px solid white;
         color: white;
         font-weight: bold;
+        min-width: 300px;
+        margin-top: auto;
     }
 
     .feature-button:hover {
-        transform: translateY(-2px);
+        transform: translateY(-3px);
         background-color: white;
-        color: #007bff;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        color: #333;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
     }
 
-    .main-title {
-        color: #333;
-        font-size: 3rem;
-        margin-bottom: 3rem;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    @media (max-width: 768px) {
+        .main-title {
+            font-size: 3rem;
+        }
+
+        .feature-button {
+            padding: 1.5rem 3rem;
+            font-size: 1.4rem;
+            min-width: 250px;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container text-center">
-    <h1 class="main-title">Добро пожаловать на образовательный портал</h1>
+<div class="page-container">
+    <div class="welcome-section text-center">
+        <h1 class="main-title">Образовательный<br>Портал</h1>
+    </div>
 
-    <div class="row justify-content-center">
-        <div class="col-md-6 mb-4">
-            <div class="card feature-card chat-card">
-                <div class="card-content">
-                    <i class="bi bi-chat-dots feature-icon"></i>
-                    <h3 class="feature-title">Чат-бот</h3>
-                    <p class="feature-description">Задайте вопрос нашему образовательному чат-боту и получите помощь в
-                        обучении.</p>
-                    <a href="{{ url_for('chat.index') }}" class="btn feature-button">Перейти к чат-боту</a>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 mb-4">
+                <div class="card feature-card chat-card">
+                    <div class="card-content">
+                        <i class="bi bi-chat-dots feature-icon"></i>
+                        <h3 class="feature-title">Чат-бот</h3>
+                        <p class="feature-description">Задайте вопрос нашему образовательному чат-боту и получите помощь
+                            в обучении.</p>
+                        <a href="{{ url_for('chat.index') }}" class="btn feature-button">Перейти к чат-боту</a>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-6 mb-4">
-            <div class="card feature-card catalog-card">
-                <div class="card-content">
-                    <i class="bi bi-journal-text feature-icon"></i>
-                    <h3 class="feature-title">Каталог</h3>
-                    <p class="feature-description">Изучите нашу коллекцию образовательных материалов и ресурсов.</p>
-                    <a href="{{ url_for('material.list') }}" class="btn feature-button">Перейти к каталогу</a>
+            <div class="col-md-6 mb-4">
+                <div class="card feature-card catalog-card">
+                    <div class="card-content">
+                        <i class="bi bi-journal-text feature-icon"></i>
+                        <h3 class="feature-title">Каталог</h3>
+                        <p class="feature-description">Изучите нашу коллекцию образовательных материалов и ресурсов.</p>
+                        <a href="{{ url_for('material.list') }}" class="btn feature-button">Перейти к каталогу</a>
+                    </div>
                 </div>
             </div>
         </div>
