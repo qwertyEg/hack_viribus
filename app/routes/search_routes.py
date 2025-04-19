@@ -11,7 +11,7 @@ def search():
     category_id = request.args.get('category_id', type=int)
     page = request.args.get('page', 1, type=int)
     
-    materials_query = Material.query.filter_by(status='approved')
+    materials_query = Material.query.filter_by(is_approved=True)
     
     if query:
         materials_query = materials_query.filter(
@@ -27,7 +27,7 @@ def search():
     materials = materials_query.paginate(page=page, per_page=10)
     categories = Category.query.all()
     
-    return render_template('materials/search.html',
+    return render_template('search/results.html',
                          materials=materials,
                          categories=categories,
                          query=query,

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Результаты поиска{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Поиск материалов</h2>
+            
+            <!-- Форма поиска -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('search.search') }}" class="row g-3">
+                        <div class="col-md-6">
+                            <input type="text" 
+                                   name="query" 
+                                   class="form-control" 
+                                   placeholder="Введите поисковый запрос..."
+                                   value="{{ query }}">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="category_id" class="form-select">
+                                <option value="">Все категории</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}" 
+                                            {% if selected_category == category.id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Поиск</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Результаты поиска -->
+            <h3>Результаты поиска</h3>
+            
+            {% if materials.items %}
+                <div class="list-group">
+                    {% for material in materials.items %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">
+                                    <a href="{{ url_for('material.view', id=material.id) }}">
+                                        {{ material.title }}
+                                    </a>
+                                </h5>
+                                <small class="text-muted">
+                                    {{ material.created_at.strftime('%d.%m.%Y') }}
+                                </small>
+                            </div>
+                            <p class="mb-1">{{ material.description }}</p>
+                            <small class="text-muted">
+                                Категория: {{ material.category.name }}
+                            </small>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Пагинация -->
+                {% if materials.pages > 1 %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% for page in materials.iter_pages() %}
+                                {% if page %}
+                                    <li class="page-item {% if page == materials.page %}active{% endif %}">
+                                        <a class="page-link" 
+                                           href="{{ url_for('search.search', page=page, query=query, category_id=selected_category) }}">
+                                            {{ page }}
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">
+                    По вашему запросу ничего не найдено
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

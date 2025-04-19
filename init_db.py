@@ -31,18 +31,20 @@ def init_db():
             Material(
                 title='Введение в математический анализ',
                 description='Базовые понятия математического анализа',
-                file_url='https://drive.google.com/file/d/1',
-                status='approved',
-                author_id=1,
-                category_id=1
+                file_id='1',
+                folder_id='1',
+                user_id=1,
+                category_id=1,
+                status='approved'
             ),
             Material(
                 title='Основы квантовой механики',
                 description='Введение в квантовую механику',
-                file_url='https://drive.google.com/file/d/2',
-                status='approved',
-                author_id=1,
-                category_id=2
+                file_id='2',
+                folder_id='2',
+                user_id=1,
+                category_id=2,
+                status='approved'
             )
         ]
         
