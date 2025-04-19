@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Поиск материалов{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('search.search') }}" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="query" class="form-control" placeholder="Поиск по названию и описанию..."
+                       value="{{ query }}">
+            </div>
+            <div class="col-md-4">
+                <select name="category_id" class="form-select">
+                    <option value="">Все категории</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" 
+                                {% if selected_category == category.id %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Поиск</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if materials.items %}
+    <div class="row">
+        {% for material in materials.items %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ material.title }}</h5>
+                        <p class="card-text">{{ material.description }}</p>
+                        <div class="mb-2">
+                            <span class="badge bg-primary">{{ material.category.name }}</span>
+                            <span class="badge bg-secondary">Рейтинг: {{ "%.1f"|format(material.average_rating()) }}</span>
+                        </div>
+                        <a href="{{ material.file_url }}" class="btn btn-outline-primary" target="_blank">Скачать</a>
+                        <a href="{{ url_for('material.detail', id=material.id) }}" class="btn btn-outline-secondary">Подробнее</a>
+                    </div>
+                    <div class="card-footer text-muted">
+                        Автор: {{ material.author.username }} | {{ material.created_at.strftime('%d.%m.%Y') }}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if materials.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('search.search', page=materials.prev_num, query=query, category_id=selected_category) }}">
+                        Предыдущая
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for page in materials.iter_pages() %}
+                {% if page %}
+                    <li class="page-item {% if page == materials.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('search.search', page=page, query=query, category_id=selected_category) }}">
+                            {{ page }}
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if materials.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('search.search', page=materials.next_num, query=query, category_id=selected_category) }}">
+                        Следующая
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% else %}
+    <div class="alert alert-info">
+        По вашему запросу ничего не найдено.
+    </div>
+{% endif %}
+{% endblock %} 
