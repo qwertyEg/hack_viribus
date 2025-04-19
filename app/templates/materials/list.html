@@ -45,7 +45,7 @@
             </div>
             <div class="card-footer bg-transparent">
                 <small class="text-muted">
-                    <i class="bi bi-person"></i> {{ material.author.username }} | 
+                    <i class="bi bi-person"></i> {{ material.author.username }} |
                     <i class="bi bi-calendar"></i> {{ material.created_at.strftime('%d.%m.%Y') }}
                 </small>
             </div>
@@ -57,31 +57,31 @@
 <nav aria-label="Page navigation" class="mt-4">
     <ul class="pagination justify-content-center">
         {% if materials.has_prev %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('material.list', page=materials.prev_num) }}">
-                    <i class="bi bi-chevron-left"></i> Предыдущая
-                </a>
-            </li>
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('material.list', page=materials.prev_num) }}">
+                <i class="bi bi-chevron-left"></i> Предыдущая
+            </a>
+        </li>
         {% endif %}
-        
+
         {% for page in materials.iter_pages() %}
-            {% if page %}
-                <li class="page-item {% if page == materials.page %}active{% endif %}">
-                    <a class="page-link" href="{{ url_for('material.list', page=page) }}">{{ page }}</a>
-                </li>
-            {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link">...</span>
-                </li>
-            {% endif %}
+        {% if page %}
+        <li class="page-item {% if page == materials.page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('material.list', page=page) }}">{{ page }}</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">...</span>
+        </li>
+        {% endif %}
         {% endfor %}
-        
+
         {% if materials.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('material.list', page=materials.next_num) }}">
-                    Следующая <i class="bi bi-chevron-right"></i>
-                </a>
-            </li>
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('material.list', page=materials.next_num) }}">
+                Следующая <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
         {% endif %}
     </ul>
 </nav>
@@ -90,4 +90,4 @@
     <i class="bi bi-info-circle"></i> Пока нет доступных материалов.
 </div>
 {% endif %}
-{% endblock %} 
+{% endblock %}
