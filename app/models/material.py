@@ -12,12 +12,17 @@ class Material(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     ratings = db.relationship('Rating', backref='material', lazy='dynamic')
+    average_rating_value = db.Column(db.Float, default=0.0)  # Добавляем поле для хранения средней оценки
 
     def average_rating(self):
+        return self.average_rating_value
+
+    def update_average_rating(self):
         ratings = self.ratings.all()
         if not ratings:
-            return 0
-        return sum(rating.value for rating in ratings) / len(ratings)
+            self.average_rating_value = 0.0
+        else:
+            self.average_rating_value = sum(rating.value for rating in ratings) / len(ratings)
 
     def is_approved(self):
         return self.status == 'approved'

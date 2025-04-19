@@ -77,22 +77,34 @@ def rate(id):
     form = RatingForm()
     if form.validate_on_submit():
         material = Material.query.get_or_404(id)
-        rating = Rating.query.filter_by(
+        
+        # Проверяем, есть ли уже оценка от этого пользователя
+        existing_rating = Rating.query.filter_by(
             user_id=current_user.id,
             material_id=material.id
         ).first()
         
-        if rating:
-            rating.value = form.rating_value.data
+        if existing_rating:
+            # Обновляем существующую оценку
+            existing_rating.value = form.rating_value.data
+            flash('Ваша оценка обновлена.', 'success')
         else:
+            # Создаем новую оценку
             rating = Rating(
                 value=form.rating_value.data,
                 user_id=current_user.id,
                 material_id=material.id
             )
             db.session.add(rating)
+            flash('Спасибо за вашу оценку!', 'success')
         
+        # Сохраняем изменения в базе данных
         db.session.commit()
-        flash('Ваша оценка сохранена.', 'success')
+        
+        # Обновляем среднюю оценку материала
+        material.update_average_rating()
+        db.session.commit()
+    else:
+        flash('Пожалуйста, выберите оценку от 1 до 5.', 'error')
     
     return redirect(url_for('material.detail', id=id)) 
