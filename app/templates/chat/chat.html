@@ -1,144 +1,65 @@
 {% extends "base.html" %}
 
-{% block title %}Чат{% endblock %}
+{% block title %}Чат с ИИ{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
-<style>
-    body {
-        background-color: #f5f7fb;
-    }
-</style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="chat-page">
+    <div class="robot-dog">
+        <div class="robot-body">
+            <div class="robot-head">
+                <div class="robot-face">
+                    <div class="robot-eyes">
+                        <div class="robot-eye left"></div>
+                        <div class="robot-eye right"></div>
+                    </div>
+                    <div class="robot-mouth"></div>
+                </div>
+                <div class="robot-ears">
+                    <div class="robot-ear left"></div>
+                    <div class="robot-ear right"></div>
+                </div>
+            </div>
+            <div class="robot-body-main">
+                <div class="robot-chest"></div>
+                <div class="robot-legs">
+                    <div class="robot-leg front-left"></div>
+                    <div class="robot-leg front-right"></div>
+                    <div class="robot-leg back-left"></div>
+                    <div class="robot-leg back-right"></div>
+                </div>
+            </div>
+            <div class="robot-tail"></div>
+        </div>
+    </div>
+
     <div class="chat-wrapper">
         <div class="chat-container">
             <div class="chat-header">
                 <i class="bi bi-robot"></i> Образовательный ассистент
             </div>
-            <div class="chat-messages" id="chatMessages">
-                <div class="message message-bot">
-                    Здравствуйте! Я ваш образовательный ассистент. Готов помочь вам с любыми вопросами по обучению.
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-message bot">
+                    <div class="message-content">
+                        Здравствуйте! Я ваш образовательный ассистент. Готов помочь вам с любыми вопросами по обучению.
+                    </div>
                 </div>
             </div>
-            <div class="chat-input">
-                <form id="chatForm">
-                    <input type="text" id="messageInput" placeholder="Введите сообщение..." required>
-                    <button type="submit">
-                        <i class="bi bi-send"></i>
-                    </button>
-                </form>
-            </div>
+            <form class="chat-form" id="chat-form">
+                <input type="text" id="chat-input" placeholder="Введите ваше сообщение..." autocomplete="off">
+                <button type="submit">
+                    <i class="bi bi-send"></i>
+                </button>
+            </form>
         </div>
     </div>
 </div>
+{% endblock %}
 
 {% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const chatForm = document.getElementById('chatForm');
-    const messageInput = document.getElementById('messageInput');
-    const chatMessages = document.getElementById('chatMessages');
-    let isProcessing = false;
-
-    function addMessage(message, isUser = false) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message message-${isUser ? 'user' : 'bot'}`;
-        messageDiv.textContent = message;
-        
-        // Добавляем сообщение с анимацией
-        messageDiv.style.opacity = '0';
-        messageDiv.style.transform = 'translateY(20px)';
-        chatMessages.appendChild(messageDiv);
-        
-        // Запускаем анимацию появления
-        requestAnimationFrame(() => {
-            messageDiv.style.transition = 'all 0.3s ease-out';
-            messageDiv.style.opacity = '1';
-            messageDiv.style.transform = 'translateY(0)';
-        });
-
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    function addTypingIndicator() {
-        if (document.getElementById('typingIndicator')) return;
-        
-        const typingDiv = document.createElement('div');
-        typingDiv.className = 'message message-bot typing-indicator';
-        typingDiv.innerHTML = `
-            <span class="typing-text">Думаю</span>
-            <span class="typing-dots">
-                <span class="dot"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
-            </span>
-            <span class="typing-emoji">✍️</span>
-        `;
-        typingDiv.id = 'typingIndicator';
-        
-        // Добавляем индикатор с анимацией
-        typingDiv.style.opacity = '0';
-        typingDiv.style.transform = 'translateY(20px)';
-        chatMessages.appendChild(typingDiv);
-        
-        // Запускаем анимацию появления
-        requestAnimationFrame(() => {
-            typingDiv.style.transition = 'all 0.3s ease-out';
-            typingDiv.style.opacity = '1';
-            typingDiv.style.transform = 'translateY(0)';
-        });
-
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    function removeTypingIndicator() {
-        const typingIndicator = document.getElementById('typingIndicator');
-        if (typingIndicator) {
-            typingIndicator.style.opacity = '0';
-            typingIndicator.style.transform = 'translateY(20px)';
-            setTimeout(() => typingIndicator.remove(), 300);
-        }
-    }
-
-    chatForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        if (isProcessing) return;
-
-        const message = messageInput.value.trim();
-        if (!message) return;
-
-        isProcessing = true;
-        messageInput.value = '';
-        messageInput.disabled = true;
-
-        // Добавляем сообщение пользователя
-        addMessage(message, true);
-        
-        // Добавляем индикатор печати
-        addTypingIndicator();
-
-        try {
-            // Здесь будет запрос к API чат-бота
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Имитация задержки
-            removeTypingIndicator();
-            addMessage('Я пока что учусь и скоро смогу вам помочь!');
-        } catch (error) {
-            removeTypingIndicator();
-            addMessage('Извините, произошла ошибка. Попробуйте позже.');
-        } finally {
-            isProcessing = false;
-            messageInput.disabled = false;
-            messageInput.focus();
-        }
-    });
-
-    // Автофокус на поле ввода при загрузке
-    messageInput.focus();
-});
-</script>
-{% endblock %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %} 

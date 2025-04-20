@@ -100,7 +100,7 @@ class CloudinaryService:
                     expires_at=int(time.time()) + 3600
                 )
             else:
-                # Для документов используем стандартный подход
+                # Для PDF и других документов получаем URL через cloudinary.utils
                 url, options = cloudinary.utils.cloudinary_url(
                     public_id,
                     resource_type='raw',
@@ -110,13 +110,15 @@ class CloudinaryService:
                     expires_at=int(time.time()) + 3600
                 )
             
-            # Загружаем файл
+            # Загружаем файл по URL
             response = requests.get(url)
-            response.raise_for_status()
+            if response.status_code != 200:
+                raise Exception(f"Ошибка при загрузке файла: {response.status_code}")
             
             return BytesIO(response.content)
         except Exception as e:
-            raise Exception(f"Ошибка при получении содержимого файла: {str(e)}")
+            print(f"Error in get_file_content: {str(e)}")
+            raise Exception(f"Ошибка при получении файла из Cloudinary: {str(e)}")
 
     def get_file_url(self, public_id):
         """Получает URL файла для просмотра"""

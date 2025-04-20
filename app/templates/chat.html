@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Чат с ИИ{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-messages" id="chat-messages">
+        <!-- Сообщения будут добавляться сюда через JavaScript -->
+    </div>
+    
+    <form class="chat-form" id="chat-form">
+        <input type="text" id="chat-input" placeholder="Введите ваше сообщение..." autocomplete="off">
+        <button type="submit">Отправить</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+{% endblock %} 
