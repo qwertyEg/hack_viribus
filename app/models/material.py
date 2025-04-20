@@ -1,5 +1,6 @@
 from datetime import datetime
 from app import db
+from app.models.rating import Rating
 
 class Material(db.Model):
     __tablename__ = 'materials'
@@ -29,24 +30,32 @@ class Material(db.Model):
 
     def add_rating(self, value):
         """Добавляет новую оценку и обновляет среднее значение"""
-        self.rating_sum += value
-        self.rating_count += 1
+        self.rating_sum = (self.rating_sum or 0) + value
+        self.rating_count = (self.rating_count or 0) + 1
         db.session.commit()
 
     def update_rating(self, old_value, new_value):
         """Обновляет существующую оценку"""
-        self.rating_sum = self.rating_sum - old_value + new_value
+        self.rating_sum = (self.rating_sum or 0) - old_value + new_value
         db.session.commit()
 
     def remove_rating(self, value):
         """Удаляет оценку"""
-        self.rating_sum -= value
-        self.rating_count -= 1
+        self.rating_sum = (self.rating_sum or 0) - value
+        self.rating_count = (self.rating_count or 0) - 1
         if self.rating_count < 0:
             self.rating_count = 0
         if self.rating_sum < 0:
             self.rating_sum = 0
         db.session.commit()
+
+    def get_user_rating(self, user_id):
+        """Получает оценку пользователя для материала"""
+        rating = Rating.query.filter_by(
+            user_id=user_id,
+            material_id=self.id
+        ).first()
+        return rating.value if rating else 0
 
     def is_approved(self):
         return self.status == 'approved'

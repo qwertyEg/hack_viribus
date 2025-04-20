@@ -2,6 +2,10 @@
 
 {% block title %}{{ material.title }}{% endblock %}
 
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/ratings.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row">
@@ -29,7 +33,7 @@
                         </div>
                         
                         <!-- Форма для оценки -->
-                        <form action="{{ url_for('material.rate', material_id=material.id) }}" method="POST" class="mt-2">
+                        <div class="rating-form mt-2">
                             {{ form.csrf_token }}
                             <div class="rating">
                                 {% for i in range(5, 0, -1) %}
@@ -37,8 +41,8 @@
                                     <label for="star{{ i }}"></label>
                                 {% endfor %}
                             </div>
-                            <button type="submit" class="btn btn-sm btn-primary ms-2">Оценить</button>
-                        </form>
+                            <button type="button" class="btn btn-sm btn-primary ms-2" onclick="submitRating({{ material.id }})">Оценить</button>
+                        </div>
                     </div>
                     
                     <p class="text-muted">

@@ -6,10 +6,10 @@
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col">
-            <h1>Материалы</h1>
+            <h1 class="text-center mb-4 floating">Материалы</h1>
         </div>
         <div class="col text-end">
-            <a href="{{ url_for('material.upload') }}" class="btn btn-primary">
+            <a href="{{ url_for('material.upload') }}" class="btn btn-3d">
                 <i class="fas fa-upload"></i> Загрузить материал
             </a>
         </div>
@@ -18,32 +18,34 @@
     <!-- Фильтры -->
     <div class="row mb-4">
         <div class="col-md-6">
-            <form method="GET" class="rating-filter">
-                <div class="row g-3">
-                    <div class="col-auto">
-                        <select name="category_id" class="form-select">
-                            <option value="">Все категории</option>
-                            {% for category in categories %}
-                                <option value="{{ category.id }}" {% if category.id == selected_category_id %}selected{% endif %}>
-                                    {{ category.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
+            <div class="glass-effect">
+                <form method="GET" class="rating-filter">
+                    <div class="row g-3">
+                        <div class="col-auto">
+                            <select name="category_id" class="form-select">
+                                <option value="">Все категории</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if category.id == selected_category_id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <select name="min_rating" class="form-select">
+                                <option value="">Любой рейтинг</option>
+                                <option value="4" {% if min_rating == 4 %}selected{% endif %}>4+ ⭐</option>
+                                <option value="3" {% if min_rating == 3 %}selected{% endif %}>3+ ⭐</option>
+                                <option value="2" {% if min_rating == 2 %}selected{% endif %}>2+ ⭐</option>
+                                <option value="1" {% if min_rating == 1 %}selected{% endif %}>1+ ⭐</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-3d">Фильтровать</button>
+                        </div>
                     </div>
-                    <div class="col-auto">
-                        <select name="min_rating" class="form-select">
-                            <option value="">Любой рейтинг</option>
-                            <option value="4" {% if min_rating == 4 %}selected{% endif %}>4+ ⭐</option>
-                            <option value="3" {% if min_rating == 3 %}selected{% endif %}>3+ ⭐</option>
-                            <option value="2" {% if min_rating == 2 %}selected{% endif %}>2+ ⭐</option>
-                            <option value="1" {% if min_rating == 1 %}selected{% endif %}>1+ ⭐</option>
-                        </select>
-                    </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-primary">Фильтровать</button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -52,10 +54,10 @@
         {% if materials %}
             {% for material in materials %}
                 <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ material.title }}</h5>
-                            <p class="card-text">{{ material.description[:200] }}{% if material.description|length > 200 %}...{% endif %}</p>
+                    <div class="material-card" data-category="{{ material.category_id }}">
+                        <div class="material-content">
+                            <h3 class="material-title">{{ material.title }}</h3>
+                            <p class="material-description">{{ material.description[:200] }}{% if material.description|length > 200 %}...{% endif %}</p>
                             
                             <!-- Рейтинг -->
                             <div class="mb-3">
@@ -68,25 +70,20 @@
                                             <span class="star" style="color: #ddd;">★</span>
                                         {% endif %}
                                     {% endfor %}
-                                    <span class="ms-2">{{ "%.1f"|format(rating) }}</span>
-                                    <small class="text-muted">({{ material.rating_count }} оценок)</small>
+                                    <span class="ms-2 average-rating">{{ "%.1f"|format(rating) }}</span>
+                                    <small class="text-muted rating-count">({{ material.rating_count }} оценок)</small>
                                 </div>
                             </div>
                             
-                            <p class="text-muted">
-                                <small>
-                                    Категория: {{ material.category.name }}<br>
-                                    Автор: {{ material.user.username }}<br>
-                                    Дата загрузки: {{ material.created_at.strftime('%d.%m.%Y %H:%M') }}
-                                </small>
-                            </p>
+                            <div class="material-meta">
+                                <span class="badge bg-primary">{{ material.category.name }}</span>
+                                <span class="text-muted">Автор: {{ material.user.username }}</span>
+                                <span class="text-muted">Дата: {{ material.created_at.strftime('%d.%m.%Y') }}</span>
+                            </div>
                             
-                            <div class="d-flex gap-2">
-                                <a href="{{ url_for('material.view', material_id=material.id) }}" class="btn btn-outline-primary">
-                                    <i class="fas fa-eye"></i> Просмотреть
-                                </a>
-                                <a href="{{ url_for('material.download', material_id=material.id) }}" class="btn btn-outline-secondary">
-                                    <i class="fas fa-download"></i> Скачать
+                            <div class="mt-3">
+                                <a href="{{ url_for('material.view', material_id=material.id) }}" class="btn btn-3d">
+                                    <i class="fas fa-eye"></i> Подробнее
                                 </a>
                             </div>
                         </div>
@@ -94,9 +91,10 @@
                 </div>
             {% endfor %}
         {% else %}
-            <div class="col">
-                <div class="alert alert-info">
-                    Материалы не найдены
+            <div class="col-12">
+                <div class="glass-effect text-center p-4">
+                    <h3>Материалы не найдены</h3>
+                    <p>Попробуйте изменить параметры фильтрации</p>
                 </div>
             </div>
         {% endif %}

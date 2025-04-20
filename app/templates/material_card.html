@@ -1,0 +1,45 @@
+{% macro render_material_card(material) %}
+<div class="material-card" data-material-id="{{ material.id }}">
+    <h3 class="material-title">{{ material.title }}</h3>
+    <p class="material-description">{{ material.description }}</p>
+    
+    {% if material.video_url %}
+    <div class="video-container">
+        <iframe src="{{ material.get_embed_url() }}" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+        </iframe>
+    </div>
+    {% endif %}
+    
+    {% if material.file_id %}
+    <div class="file-container">
+        <a href="{{ url_for('download_material', file_id=material.file_id) }}" class="download-button">
+            <i class="fas fa-download"></i> Download Material
+        </a>
+    </div>
+    {% endif %}
+    
+    <div class="rating-container">
+        <div class="rating-info">
+            <span class="rating-label">Average Rating:</span>
+            <span class="average-rating">{{ "%.1f"|format(material.average_rating()) }}</span>
+        </div>
+        
+        {% if current_user.is_authenticated %}
+        <div class="rating-stars" data-material-id="{{ material.id }}" data-current-rating="{{ material.get_user_rating(current_user.id) }}">
+            {% for i in range(5) %}
+            <span class="star" data-value="{{ i + 1 }}">★</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="material-meta">
+        <span class="author">By {{ material.user.username }}</span>
+        <span class="category">{{ material.category.name }}</span>
+        <span class="date">{{ material.created_at.strftime('%Y-%m-%d') }}</span>
+    </div>
+</div>
+{% endmacro %} 

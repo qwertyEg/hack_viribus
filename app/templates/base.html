@@ -4,155 +4,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{% endblock %} - Образовательный портал</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}{% endblock %} - Viribus</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/materials.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         body {
-            background-color: #f8f9fa;
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
-
+        
         .navbar {
-            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        .main-content {
-            flex: 1;
-            padding: 2rem 0;
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-
-        .card {
-            box-shadow: 0 2px 4px rgba(0, 0, 0, .05);
-            transition: transform 0.2s;
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
         }
-
-        .card:hover {
-            transform: translateY(-5px);
+        
+        .nav-link:hover {
+            color: #fff;
+            transform: translateY(-2px);
         }
-
-        .footer {
-            background-color: #343a40;
-            color: white;
-            padding: 1rem 0;
-            margin-top: auto;
+        
+        .container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
         }
-
-        .form-control:focus {
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
         }
-
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
         }
-
-        .btn-primary:hover {
-            background-color: #0069d9;
-            border-color: #0062cc;
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('home.index') }}">
-                <i class="bi bi-book"></i> Образовательный портал
+            <a class="navbar-brand" href="{{ url_for('material.index') }}">
+                <i class="fas fa-book-open"></i> Viribus
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('chat.chat') }}">
-                            <i class="bi bi-chat-dots"></i> Чат-бот
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('material.list') }}">
-                            <i class="bi bi-journal-text"></i> Каталог
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('search.search') }}">
-                            <i class="bi bi-search"></i> Поиск
-                        </a>
-                    </li>
+                <ul class="navbar-nav ms-auto">
                     {% if current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('material.upload') }}">
-                            <i class="bi bi-upload"></i> Загрузить
-                        </a>
-                    </li>
-                    {% if current_user.is_moderator() %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('moderation.panel') }}">
-                            <i class="bi bi-shield-check"></i> Модерация
-                        </a>
-                    </li>
-                    {% endif %}
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav">
-                    {% if current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <span class="nav-link">
-                            <i class="bi bi-person"></i> {{ current_user.username }}
-                        </span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.logout') }}">
-                            <i class="bi bi-box-arrow-right"></i> Выйти
-                        </a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('material.list') }}">
+                                <i class="fas fa-book"></i> Материалы
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('material.upload') }}">
+                                <i class="fas fa-upload"></i> Загрузить
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                                <i class="fas fa-sign-out-alt"></i> Выйти
+                            </a>
+                        </li>
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.login') }}">
-                            <i class="bi bi-box-arrow-in-right"></i> Войти
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.register') }}">
-                            <i class="bi bi-person-plus"></i> Регистрация
-                        </a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <i class="fas fa-sign-in-alt"></i> Войти
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.register') }}">
+                                <i class="fas fa-user-plus"></i> Регистрация
+                            </a>
+                        </li>
                     {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="main-content">
-        <div class="container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            {% endfor %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
             {% endif %}
-            {% endwith %}
-
-            {% block content %}{% endblock %}
-        </div>
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
     </div>
 
-    <footer class="footer">
-        <div class="container text-center">
-            <p class="mb-0">&copy; 2024 Образовательный портал. Все права защищены.</p>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/rating.js') }}"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
     {% block extra_js %}{% endblock %}
 </body>
 

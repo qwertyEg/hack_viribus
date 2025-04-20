@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from 'material_card.html' import render_material_card %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center mb-4">Materials</h1>
+    
+    {% if current_user.is_authenticated %}
+    <div class="text-center mb-4">
+        <a href="{{ url_for('material.upload') }}" class="btn btn-primary">
+            <i class="fas fa-upload"></i> Upload New Material
+        </a>
+    </div>
+    {% endif %}
+    
+    <div class="materials-grid">
+        {% for material in materials %}
+            {{ render_material_card(material) }}
+        {% else %}
+            <p class="text-center">No materials available yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

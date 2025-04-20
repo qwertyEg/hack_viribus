@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, send_file, Response
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, send_file, Response, jsonify
 from flask_login import login_required, current_user
 from app.models.material import Material
 from app.models.rating import Rating
@@ -193,28 +193,44 @@ def download(material_id):
         flash(f'Ошибка при скачивании файла: {str(e)}')
         return redirect(url_for('material.view', material_id=material_id))
 
-@bp.route('/materials/<int:material_id>/rate', methods=['POST'])
+@bp.route('/materials/<int:id>/rate', methods=['POST'])
 @login_required
-def rate(material_id):
-    form = RatingForm()
-    if form.validate_on_submit():
-        material = Material.query.get_or_404(material_id)
-        rating = Rating.query.filter_by(
+def rate(id):
+    try:
+        data = request.get_json()
+        if not data or 'rating' not in data:
+            return jsonify({'error': 'Отсутствует оценка'}), 400
+
+        rating_value = int(data['rating'])
+        if rating_value < 1 or rating_value > 5:
+            return jsonify({'error': 'Некорректное значение оценки'}), 400
+
+        material = Material.query.get_or_404(id)
+        existing_rating = Rating.query.filter_by(
             user_id=current_user.id,
             material_id=material.id
         ).first()
-        
-        if rating:
-            rating.value = form.rating.data
+
+        if existing_rating:
+            old_value = existing_rating.value
+            existing_rating.value = rating_value
+            material.update_rating(old_value, rating_value)
         else:
             rating = Rating(
                 user_id=current_user.id,
                 material_id=material.id,
-                value=form.rating.data
+                value=rating_value
             )
             db.session.add(rating)
-        
+            material.add_rating(rating_value)
+
         db.session.commit()
-        flash('Ваша оценка сохранена')
-    
-    return redirect(url_for('material.view', material_id=material_id)) 
+        
+        return jsonify({
+            'success': True,
+            'average_rating': material.average_rating(),
+            'rating_count': material.rating_count
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Ошибка при сохранении оценки: {str(e)}'}), 500 
