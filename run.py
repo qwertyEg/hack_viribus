@@ -1,8 +1,17 @@
-from app import create_app, db
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-app = create_app()
+"""
+Скрипт для запуска системы индексации документов
+"""
 
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True) 
+import os
+import sys
+
+# Добавляем корневую директорию проекта в путь для импортов
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
+from src.main import main
+
+if __name__ == "__main__":
+    main() 
