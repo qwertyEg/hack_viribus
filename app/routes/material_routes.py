@@ -28,6 +28,10 @@ def list():
     # Базовый запрос
     query = Material.query
     
+    # Если пользователь не модератор, показываем только одобренные материалы
+    if not current_user.is_moderator():
+        query = query.filter_by(status='approved')
+    
     # Фильтр по категории
     if category_id:
         query = query.filter_by(category_id=category_id)
@@ -52,6 +56,12 @@ def list():
 @login_required
 def view(material_id):
     material = Material.query.get_or_404(material_id)
+    
+    # Проверяем, имеет ли пользователь доступ к материалу
+    if not current_user.is_moderator() and material.status != 'approved':
+        flash('У вас нет доступа к этому материалу', 'danger')
+        return redirect(url_for('material.list'))
+    
     cloudinary_service = CloudinaryService()
     form = RatingForm()
     return render_template('material/view.html', material=material, cloudinary_service=cloudinary_service, form=form)
@@ -60,6 +70,12 @@ def view(material_id):
 @login_required
 def preview(material_id):
     material = Material.query.get_or_404(material_id)
+    
+    # Проверяем, имеет ли пользователь доступ к материалу
+    if not current_user.is_moderator() and material.status != 'approved':
+        flash('У вас нет доступа к этому материалу', 'danger')
+        return redirect(url_for('material.list'))
+    
     cloudinary_service = CloudinaryService()
     
     try:
@@ -170,6 +186,12 @@ def upload():
 @login_required
 def download(material_id):
     material = Material.query.get_or_404(material_id)
+    
+    # Проверяем, имеет ли пользователь доступ к материалу
+    if not current_user.is_moderator() and material.status != 'approved':
+        flash('У вас нет доступа к этому материалу', 'danger')
+        return redirect(url_for('material.list'))
+    
     cloudinary_service = CloudinaryService()
     
     try:
