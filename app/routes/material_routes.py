@@ -21,15 +21,23 @@ def index():
 @bp.route('/materials')
 @login_required
 def list():
-    # Получаем ID категории из параметров запроса
+    # Получаем параметры фильтрации
     category_id = request.args.get('category_id', type=int)
+    min_rating = request.args.get('min_rating', type=float)
     
-    # Если указана категория, фильтруем материалы
+    # Базовый запрос
+    query = Material.query
+    
+    # Фильтр по категории
     if category_id:
-        materials = Material.query.filter_by(category_id=category_id).all()
-    else:
-        # Иначе показываем все материалы
-        materials = Material.query.all()
+        query = query.filter_by(category_id=category_id)
+    
+    # Фильтр по рейтингу
+    if min_rating:
+        query = query.filter(Material.rating_sum / Material.rating_count >= min_rating)
+    
+    # Получаем материалы
+    materials = query.all()
     
     # Получаем список всех категорий для фильтра
     categories = Category.query.all()
@@ -37,14 +45,16 @@ def list():
     return render_template('material/list.html', 
                          materials=materials,
                          categories=categories,
-                         selected_category_id=category_id)
+                         selected_category_id=category_id,
+                         min_rating=min_rating)
 
 @bp.route('/<int:material_id>')
 @login_required
 def view(material_id):
     material = Material.query.get_or_404(material_id)
     cloudinary_service = CloudinaryService()
-    return render_template('material/view.html', material=material, cloudinary_service=cloudinary_service)
+    form = RatingForm()
+    return render_template('material/view.html', material=material, cloudinary_service=cloudinary_service, form=form)
 
 @bp.route('/materials/<int:material_id>/preview')
 @login_required
@@ -71,63 +81,88 @@ def preview(material_id):
 @bp.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
+    print("Upload route called")
     form = UploadForm()
-    if form.validate_on_submit():
-        try:
-            # Обработка категории
-            if form.create_new_category.data:
-                # Создаем новую категорию
-                category = Category(name=form.new_category.data)
-                db.session.add(category)
-                db.session.commit()
-                category_id = category.id
-            else:
-                category_id = form.category_id.data
+    print(f"Form created. Method: {request.method}")
+    
+    if request.method == 'POST':
+        print("POST request received")
+        print(f"Form data: {request.form}")
+        print(f"Files: {request.files}")
+        
+        if form.validate_on_submit():
+            print("Form validated successfully")
+            print(f"Material type: {form.material_type.data}")
+            print(f"File data: {form.file.data}")
+            print(f"Video URL: {form.video_url.data}")
+            
+            try:
+                # Обработка категории
+                if form.create_new_category.data:
+                    print("Creating new category")
+                    # Создаем новую категорию
+                    category = Category(name=form.new_category.data)
+                    db.session.add(category)
+                    db.session.commit()
+                    category_id = category.id
+                else:
+                    category_id = form.category_id.data
+                    print(f"Using existing category: {category_id}")
 
-            if form.material_type.data == 'file':
-                # Обработка загрузки файла
-                file = form.file.data
-                if file:
-                    filename = secure_filename(file.filename)
-                    upload_folder = current_app.config['UPLOAD_FOLDER']
-                    os.makedirs(upload_folder, exist_ok=True)
-                    file_path = os.path.join(upload_folder, filename)
-                    file.save(file_path)
+                if form.material_type.data == 'file':
+                    print("Processing file upload")
+                    # Обработка загрузки файла
+                    file = form.file.data
+                    if file:
+                        print(f"File received: {file.filename}")
+                        filename = secure_filename(file.filename)
+                        upload_folder = current_app.config['UPLOAD_FOLDER']
+                        os.makedirs(upload_folder, exist_ok=True)
+                        file_path = os.path.join(upload_folder, filename)
+                        file.save(file_path)
 
-                    # Загрузка в Cloudinary
-                    cloudinary = CloudinaryService()
-                    result = cloudinary.upload_file(file_path, folder_name=str(category_id))
-                    os.remove(file_path)  # Удаляем временный файл
+                        # Загрузка в Cloudinary
+                        cloudinary = CloudinaryService()
+                        result = cloudinary.upload_file(file_path, folder_name=str(category_id))
+                        os.remove(file_path)  # Удаляем временный файл
 
-                    # Создаем запись о материале
+                        # Создаем запись о материале
+                        material = Material(
+                            title=form.title.data,
+                            description=form.description.data,
+                            file_id=result['public_id'],
+                            user_id=current_user.id,
+                            category_id=category_id,
+                            status='unapproved'
+                        )
+                else:
+                    print("Processing video URL")
+                    # Обработка видео URL
                     material = Material(
                         title=form.title.data,
                         description=form.description.data,
-                        file_id=result['public_id'],
+                        video_url=form.video_url.data,
                         user_id=current_user.id,
                         category_id=category_id,
                         status='unapproved'
                     )
-            else:
-                # Обработка видео URL
-                material = Material(
-                    title=form.title.data,
-                    description=form.description.data,
-                    video_url=form.video_url.data,
-                    user_id=current_user.id,
-                    category_id=category_id,
-                    status='unapproved'
-                )
 
-            db.session.add(material)
-            db.session.commit()
-            flash('Материал успешно загружен и ожидает модерации', 'success')
-            return redirect(url_for('material.list'))
+                db.session.add(material)
+                db.session.commit()
+                print("Material saved to database")
+                flash('Материал успешно загружен и ожидает модерации', 'success')
+                return redirect(url_for('material.list'))
 
-        except Exception as e:
-            flash(f'Ошибка при загрузке материала: {str(e)}', 'error')
-            db.session.rollback()
-
+            except Exception as e:
+                print(f"Error during upload: {str(e)}")
+                flash(f'Ошибка при загрузке материала: {str(e)}', 'error')
+                db.session.rollback()
+        else:
+            print("Form validation failed")
+            print(f"Form errors: {form.errors}")
+            for field, errors in form.errors.items():
+                print(f"Field {field} errors: {errors}")
+        
     categories = Category.query.all()
     return render_template('material/upload.html', form=form, categories=categories)
 

@@ -28,17 +28,26 @@ def init_db():
             db.session.commit()
             print('Категории созданы')
         
+        # Создаем категорию по умолчанию, если её нет
+        default_category = Category.query.filter_by(name='Общее').first()
+        if not default_category:
+            default_category = Category(name='Общее')
+            db.session.add(default_category)
+            db.session.commit()
+            print("Created default category")
+        
         # Создаем администратора, если его нет
-        if User.query.filter_by(username='admin').first() is None:
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
             admin = User(
                 username='admin',
                 email='admin@example.com',
-                is_admin=True
+                role='admin'
             )
             admin.set_password('admin')
             db.session.add(admin)
             db.session.commit()
-            print('Администратор создан')
+            print("Created admin user")
         
         print('База данных инициализирована')
 

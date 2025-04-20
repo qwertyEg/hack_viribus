@@ -13,6 +13,9 @@ import urllib.parse
 
 class CloudinaryService:
     def __init__(self):
+        print("Initializing CloudinaryService")
+        print(f"Cloud name: {current_app.config['CLOUDINARY_CLOUD_NAME']}")
+        print(f"API key: {current_app.config['CLOUDINARY_API_KEY']}")
         cloudinary.config(
             cloud_name=current_app.config['CLOUDINARY_CLOUD_NAME'],
             api_key=current_app.config['CLOUDINARY_API_KEY'],
@@ -21,8 +24,12 @@ class CloudinaryService:
 
     def upload_file(self, file_path, folder_name):
         try:
+            print(f"Starting file upload: {file_path}")
+            print(f"Folder name: {folder_name}")
+            
             # Определяем тип файла по расширению
             file_extension = os.path.splitext(file_path)[1].lower()
+            print(f"File extension: {file_extension}")
             
             # Настройки для разных типов файлов
             upload_options = {
@@ -38,6 +45,7 @@ class CloudinaryService:
             
             # Для видео добавляем специальные настройки
             if file_extension == '.mp4':
+                print("Configuring video upload options")
                 upload_options.update({
                     'resource_type': 'video',
                     'format': 'mp4',
@@ -46,10 +54,13 @@ class CloudinaryService:
                     ]
                 })
             else:
+                print("Configuring document upload options")
                 # Для документов используем raw тип
                 upload_options.update({
                     'resource_type': 'raw'
                 })
+            
+            print(f"Upload options: {upload_options}")
             
             # Загружаем файл через SDK
             result = cloudinary.uploader.upload(
@@ -57,11 +68,14 @@ class CloudinaryService:
                 **upload_options
             )
             
+            print(f"Upload successful. Result: {result}")
+            
             return {
                 'url': result['secure_url'],
                 'public_id': result['public_id']
             }
         except Exception as e:
+            print(f"Error in upload_file: {str(e)}")
             raise Exception(f"Ошибка при загрузке файла в Cloudinary: {str(e)}")
 
     def delete_file(self, public_id):

@@ -12,6 +12,35 @@
                 </div>
                 <div class="card-body">
                     <p class="card-text">{{ material.description }}</p>
+                    
+                    <!-- Блок с рейтингом -->
+                    <div class="mb-3">
+                        <div class="rating-display">
+                            {% set rating = material.average_rating() %}
+                            {% for i in range(5) %}
+                                {% if i < rating|int %}
+                                    <span class="star">★</span>
+                                {% else %}
+                                    <span class="star" style="color: #ddd;">★</span>
+                                {% endif %}
+                            {% endfor %}
+                            <span class="ms-2">{{ "%.1f"|format(rating) }}</span>
+                            <small class="text-muted">({{ material.rating_count }} оценок)</small>
+                        </div>
+                        
+                        <!-- Форма для оценки -->
+                        <form action="{{ url_for('material.rate', material_id=material.id) }}" method="POST" class="mt-2">
+                            {{ form.csrf_token }}
+                            <div class="rating">
+                                {% for i in range(5, 0, -1) %}
+                                    <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" />
+                                    <label for="star{{ i }}"></label>
+                                {% endfor %}
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-primary ms-2">Оценить</button>
+                        </form>
+                    </div>
+                    
                     <p class="text-muted">
                         <small>
                             Категория: {{ material.category.name }}<br>
@@ -60,6 +89,39 @@
     width: 100%;
     height: 100%;
     border: none;
+}
+
+/* Стили для рейтинга */
+.rating {
+    display: inline-flex;
+    gap: 5px;
+    direction: rtl;
+}
+
+.rating input {
+    display: none;
+}
+
+.rating label {
+    cursor: pointer;
+    font-size: 25px;
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.rating label:before {
+    content: "★";
+}
+
+.rating input:checked ~ label,
+.rating label:hover,
+.rating label:hover ~ label {
+    color: #ffd700;
+}
+
+.rating-display {
+    color: #ffd700;
+    font-size: 20px;
 }
 </style>
 {% endblock %} 

@@ -11,7 +11,7 @@
                     <h2 class="card-title">Загрузка материала</h2>
                 </div>
                 <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data">
+                    <form method="POST" action="{{ url_for('material.upload') }}" enctype="multipart/form-data" id="uploadForm">
                         {{ form.csrf_token }}
                         
                         <div class="mb-3">
@@ -134,6 +134,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('uploadForm');
     const materialType = document.querySelectorAll('input[name="material_type"]');
     const fileField = document.querySelector('.file-field');
     const videoField = document.querySelector('.video-field');
@@ -142,16 +143,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const createNewCategory = document.getElementById('create_new_category');
     
     function toggleFields() {
-        const selectedType = document.querySelector('input[name="material_type"]:checked').value;
-        fileField.style.display = selectedType === 'file' ? 'block' : 'none';
-        videoField.style.display = selectedType === 'video' ? 'block' : 'none';
+        const selectedType = document.querySelector('input[name="material_type"]:checked')?.value;
+        if (selectedType) {
+            fileField.style.display = selectedType === 'file' ? 'block' : 'none';
+            videoField.style.display = selectedType === 'video' ? 'block' : 'none';
+        }
     }
     
     materialType.forEach(radio => {
         radio.addEventListener('change', toggleFields);
     });
     
-    // Обработка переключения создания новой категории
     createNewCategory.addEventListener('change', function() {
         if (this.checked) {
             existingCategory.style.display = 'none';
@@ -159,6 +161,40 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             existingCategory.style.display = 'block';
             newCategory.style.display = 'none';
+        }
+    });
+    
+    // Обработка отправки формы
+    form.addEventListener('submit', function(e) {
+        const selectedType = document.querySelector('input[name="material_type"]:checked')?.value;
+        if (!selectedType) {
+            alert('Пожалуйста, выберите тип материала');
+            e.preventDefault();
+            return;
+        }
+        
+        if (selectedType === 'file' && !form.querySelector('input[type="file"]').files[0]) {
+            alert('Пожалуйста, выберите файл для загрузки');
+            e.preventDefault();
+            return;
+        }
+        
+        if (selectedType === 'video' && !form.querySelector('input[name="video_url"]').value) {
+            alert('Пожалуйста, укажите URL видео');
+            e.preventDefault();
+            return;
+        }
+        
+        if (createNewCategory.checked && !form.querySelector('input[name="new_category"]').value) {
+            alert('Пожалуйста, укажите название новой категории');
+            e.preventDefault();
+            return;
+        }
+        
+        if (!createNewCategory.checked && !form.querySelector('select[name="category_id"]').value) {
+            alert('Пожалуйста, выберите категорию');
+            e.preventDefault();
+            return;
         }
     });
     
